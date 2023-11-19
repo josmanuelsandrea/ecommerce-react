@@ -8,7 +8,7 @@ export interface NavbarState {
 
 // Define the initial state using that type
 const initialState: NavbarState = {
-  active: true
+  active: false
 }
 
 export const navSlice = createSlice({
