@@ -1,58 +1,55 @@
-import { Formik, Form, Field, ErrorMessage } from "formik"
-import * as Yup from 'yup'
-import YupPassword from "yup-password"
-YupPassword(Yup)
+import { Formik, Form } from "formik"
+import FormField from "./FormField"
+import SubmitButton from "./SubmitButton"
+import FormErrorMessage from "./FormErrorMessage"
+import { signInSchema, httpRequest } from "./handlers/formHandlers"
+import { useState } from 'react'
 
-interface MyFormValues {
+export interface FormValues {
     email: string,
     password: string,
 }
 
-const signInSchema = Yup.object().shape({
-    email: Yup.string().email('Type a correct email form.').required('This field is required'),
-    password: Yup
-        .string()
-        .password()
-        .required('This field is required')
-        .min(8, 'Password must be at least 8 characters')
-        .minNumbers(1, 'At least one number')
-        .minLowercase(1, 'At least one lowercase letter')
-        .minUppercase(1, 'At least one uppercase letter')
-        .minSymbols(1, 'At least one symbol')
-})
-
 const FormComponent = () => {
-    const initialValues: MyFormValues = { email: '', password: '' }
+    const initialValues: FormValues = { email: '', password: '' }
+    const [ERROR_FORM, SET_ERROR_FORM] = useState('')
+
     return (
         <div className="flex flex-col">
             <h1 className="font-Inter-Bold text-green-500 uppercase text-2xl">Register</h1>
             <Formik
                 initialValues={initialValues}
                 validationSchema={signInSchema}
-                onSubmit={(values, actions) => {
-                    console.log({ values, actions })
-                    alert(JSON.stringify(values, null, 2))
+                onSubmit={async (values, actions) => {
                     actions.setSubmitting(false)
-                }}
+                    const { data, reqStatus } = await httpRequest('http://localhost:8000/api/auth/register', 'POST', {email: values.email, password: values.password})
+                    if (reqStatus.status === 400) {
+                        if (data.email) SET_ERROR_FORM(data.email)
+                    }
+                    if (reqStatus.status === 200) {
+                        SET_ERROR_FORM('')
+                    }
+                }} 
+                // TODO move the onSubmit function to another file, make it modular
+                // TODO Redirect the sucessful registered users to the login form or retrieve the jwt tokens in the same function
             >
                 <Form className="font-Inter-Bold text-xl sm:text-2xl">
-                    <div className="flex flex-col my-5">
-                        <label htmlFor="email" className="text-green-500">EMAIL</label>
-                        <Field id="email" name="email" placeholder="Email" className="text-white pl-2 py-1 focus:outline-none font-Inter bg-shark-950 border-shark-500 border-2 rounded" />
-                        <div className="text-red-400 font-Inter text-sm">
-                            <ErrorMessage name="email" />
-                        </div>
-                    </div>
-                    <div className="flex flex-col my-5">
-                        <label htmlFor="password" className="text-green-500">PASSWORD</label>
-                        <Field id="password" name="password" type="password" placeholder="Password" className="text-white pl-2 py-1 focus:outline-none font-Inter bg-shark-950 border-shark-500 border-2 rounded" />
-                        <div className="text-red-400 font-Inter text-sm">
-                            <ErrorMessage name="password" />
-                        </div>
-                    </div>
-                    <div className="flex">
-                        <button type="submit" className="w-full text-white border-shark-500 border-2 hover:bg-green-500 hover:border-green-500">REGISTER</button>
-                    </div>
+                    <FormField 
+                        FIELD_LABEL="EMAIL"
+                        FIELD_NAME="email"
+                        FIELD_TYPE="text"
+                        FIELD_ID="email"
+                        FIELD_PLACEHOLDER="example@here.com"
+                    />
+                    <FormField 
+                        FIELD_LABEL="PASSWORD"
+                        FIELD_NAME="password"
+                        FIELD_TYPE="password"
+                        FIELD_ID="password"
+                        FIELD_PLACEHOLDER="*******"
+                    />
+                    <FormErrorMessage error={ERROR_FORM}/>
+                    <SubmitButton />
                 </Form>
             </Formik>
         </div>
