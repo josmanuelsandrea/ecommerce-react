@@ -2,7 +2,8 @@ import { Formik, Form } from "formik"
 import FormField from "./FormField"
 import SubmitButton from "./SubmitButton"
 import FormErrorMessage from "./FormErrorMessage"
-import { signInSchema, httpRequest } from "./handlers/formHandlers"
+import { signInSchema } from "./handlers/formHandlers"
+import onSubmitRegisterForm from "@/features/RegisterForm/onSubmitRegisterForm"
 import { useState } from 'react'
 
 export interface FormValues {
@@ -21,17 +22,10 @@ const FormComponent = () => {
                 initialValues={initialValues}
                 validationSchema={signInSchema}
                 onSubmit={async (values, actions) => {
-                    actions.setSubmitting(false)
-                    const { data, reqStatus } = await httpRequest('http://localhost:8000/api/auth/register', 'POST', {email: values.email, password: values.password})
-                    if (reqStatus.status === 400) {
-                        if (data.email) SET_ERROR_FORM(data.email)
-                    }
-                    if (reqStatus.status === 200) {
-                        SET_ERROR_FORM('')
-                    }
+                    onSubmitRegisterForm(values, actions, SET_ERROR_FORM);
                 }} 
-                // TODO move the onSubmit function to another file, make it modular
                 // TODO Redirect the sucessful registered users to the login form or retrieve the jwt tokens in the same function
+                // I will handle
             >
                 <Form className="font-Inter-Bold text-xl sm:text-2xl">
                     <FormField 
